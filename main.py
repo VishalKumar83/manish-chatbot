@@ -7,8 +7,7 @@ export process using a simple retrieval-augmented approach:
 we inject the company's product/knowledge context into the LLM
 prompt so answers stay grounded in real business info.
 
-Uses Google's Gemini API, which has a genuine ongoing free tier
-(no credit card required) — see https://aistudio.google.com
+Uses Google's Gemini API — see https://aistudio.google.com
 
 Run locally:
     pip install -r requirements.txt
@@ -78,7 +77,12 @@ app.add_middleware(
 )
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-MODEL_NAME = "gemini-2.5-flash"  # free-tier model
+
+# --- FIX: gemini-2.5-flash was retired by Google; updated to the
+# current production Flash model (GA as of July 2026). If this ever
+# 502s again with a "model not found" style error in the logs, check
+# https://ai.google.dev/gemini-api/docs/models for the current name. ---
+MODEL_NAME = "gemini-3.6-flash"
 
 # ---------------------------------------------------------------------
 # Company knowledge base (this is the "retrieval" context).
@@ -235,3 +239,5 @@ def analytics_summary():
         "queries_by_day": [dict(r) for r in by_day],
         "recent_conversations": [dict(r) for r in recent],
     }
+
+   
