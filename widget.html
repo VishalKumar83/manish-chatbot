@@ -1,0 +1,111 @@
+<!--
+  Manish Innovations - AI Chat Widget
+  -------------------------------------
+  Paste this entire block into an Elementor "HTML" widget on the
+  WordPress site (any page - it floats in the corner site-wide if
+  added to the footer template). Update API_URL to your deployed
+  backend once main.py is hosted.
+-->
+<style>
+  #mi-chat-bubble {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #2e7d32; color: #fff; display: flex;
+    align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    font-size: 26px; font-family: sans-serif;
+  }
+  #mi-chat-window {
+    position: fixed; bottom: 90px; right: 20px; z-index: 9999;
+    width: 320px; max-width: 90vw; height: 420px;
+    background: #fff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    display: none; flex-direction: column; overflow: hidden;
+    font-family: sans-serif;
+  }
+  #mi-chat-header {
+    background: #2e7d32; color: #fff; padding: 12px 16px;
+    font-weight: 600; font-size: 15px;
+  }
+  #mi-chat-messages {
+    flex: 1; padding: 12px; overflow-y: auto; font-size: 14px; background: #f7f7f7;
+  }
+  .mi-msg { margin-bottom: 10px; line-height: 1.4; }
+  .mi-msg.user { text-align: right; }
+  .mi-msg.user span { background: #2e7d32; color: #fff; padding: 6px 10px; border-radius: 10px 10px 0 10px; display: inline-block; }
+  .mi-msg.bot span { background: #e6e6e6; color: #222; padding: 6px 10px; border-radius: 10px 10px 10px 0; display: inline-block; }
+  #mi-chat-input-row { display: flex; border-top: 1px solid #ddd; }
+  #mi-chat-input { flex: 1; border: none; padding: 10px; font-size: 14px; outline: none; }
+  #mi-chat-send { border: none; background: #2e7d32; color: #fff; padding: 0 16px; cursor: pointer; }
+</style>
+
+<div id="mi-chat-bubble">💬</div>
+<div id="mi-chat-window">
+  <div id="mi-chat-header">Manish Innovations Assistant</div>
+  <div id="mi-chat-messages"></div>
+  <div id="mi-chat-input-row">
+    <input id="mi-chat-input" type="text" placeholder="Ask about our products..." />
+    <button id="mi-chat-send">Send</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Update this once the FastAPI backend is deployed (e.g. Render/Railway URL)
+  const API_URL = "http://localhost:8000/chat";
+
+  const bubble = document.getElementById("mi-chat-bubble");
+  const win = document.getElementById("mi-chat-window");
+  const messagesEl = document.getElementById("mi-chat-messages");
+  const input = document.getElementById("mi-chat-input");
+  const sendBtn = document.getElementById("mi-chat-send");
+
+  let history = [];
+
+  bubble.addEventListener("click", () => {
+    win.style.display = win.style.display === "flex" ? "none" : "flex";
+    if (messagesEl.childElementCount === 0) {
+      addMessage("bot", "Hi! I'm the Manish Innovations assistant. Ask me about our spices, powders, nuts, or export process.");
+    }
+  });
+
+  function addMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = "mi-msg " + (role === "user" ? "user" : "bot");
+    const span = document.createElement("span");
+    span.textContent = text;
+    div.appendChild(span);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage("user", text);
+    input.value = "";
+    addMessage("bot", "...");
+    const thinkingEl = messagesEl.lastChild;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history }),
+      });
+      const data = await res.json();
+      thinkingEl.remove();
+      addMessage("bot", data.reply || "Sorry, I couldn't process that.");
+      history.push({ role: "user", content: text });
+      history.push({ role: "assistant", content: data.reply || "" });
+    } catch (err) {
+      thinkingEl.remove();
+      addMessage("bot", "Sorry, I'm having trouble connecting right now. Please email sales@innovationsmanish.com.");
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+})();
+</script>

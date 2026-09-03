@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--
+  Manish Innovations - Chatbot Analytics Dashboard (admin-only)
+  -----------------------------------------------------------------
+  A standalone page — open it locally or host it separately from
+  the public site. It calls the /analytics/summary endpoint on
+  the FastAPI backend and renders query volume, success rate,
+  latency, and a raw conversation log.
+
+  Before going live: put this behind a login (or at minimum an
+  unlisted URL) and add basic auth to the /analytics endpoint in
+  main.py, since it shows real customer conversations.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chatbot Analytics — Manish Innovations</title>
+<style>
+  body { font-family: -apple-system, Arial, sans-serif; background: #f4f6f5; margin: 0; padding: 24px; color: #1a1a1a; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 13px; margin-bottom: 24px; }
+  .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .card { background: #fff; border-radius: 10px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); min-width: 140px; }
+  .card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.03em; }
+  .card .value { font-size: 26px; font-weight: 700; color: #2e7d32; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  th, td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #eee; vertical-align: top; }
+  th { background: #2e7d32; color: #fff; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .fail { color: #c62828; font-weight: 600; }
+  .ok { color: #2e7d32; font-weight: 600; }
+  #apiInput { padding: 8px 10px; width: 340px; font-size: 13px; border: 1px solid #ccc; border-radius: 6px; margin-right: 8px; }
+  #loadBtn { padding: 8px 14px; background: #2e7d32; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  #status { font-size: 13px; color: #666; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>Chatbot Analytics — Manish Innovations</h1>
+  <div class="sub">Live usage data from the AI customer chatbot.</div>
+
+  <div>
+    <input id="apiInput" type="text" placeholder="Backend base URL, e.g. https://manish-chatbot.onrender.com" />
+    <button id="loadBtn">Load Data</button>
+  </div>
+  <div id="status"></div>
+
+  <div class="cards" id="cards" style="margin-top:20px;"></div>
+
+  <h3>Recent conversations</h3>
+  <table id="logTable">
+    <thead>
+      <tr><th>Time</th><th>User message</th><th>Bot reply</th><th>Status</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+  const apiInput = document.getElementById('apiInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const statusEl = document.getElementById('status');
+  const cardsEl = document.getElementById('cards');
+  const tbody = document.querySelector('#logTable tbody');
+
+  // Remember last-used URL in this browser session (not localStorage — kept in memory only)
+  let lastUrl = '';
+
+  function card(label, value) {
+    return `<div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>`;
+  }
+
+  async function loadData() {
+    const base = apiInput.value.trim().replace(/\/$/, '');
+    if (!base) { statusEl.textContent = 'Enter your backend URL first.'; return; }
+    lastUrl = base;
+    statusEl.textContent = 'Loading...';
+    try {
+      const res = await fetch(base + '/analytics/summary');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      statusEl.textContent = 'Loaded successfully.';
+
+      cardsEl.innerHTML =
+        card('Total Queries', data.total_queries ?? 0) +
+        card('Success Rate', data.success_rate != null ? (data.success_rate * 100).toFixed(1) + '%' : '—') +
+        card('Avg Latency', data.avg_latency_ms != null ? data.avg_latency_ms + ' ms' : '—') +
+        card('Failed Queries', data.failed_queries ?? 0);
+
+      tbody.innerHTML = '';
+      (data.recent_conversations || []).forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(row.timestamp).toLocaleString()}</td>
+          <td>${escapeHtml(row.user_message || '')}</td>
+          <td>${escapeHtml(row.bot_reply || '(no reply)')}</td>
+          <td class="${row.success ? 'ok' : 'fail'}">${row.success ? 'OK' : 'FAILED'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      statusEl.textContent = 'Could not load data: ' + err.message + '. Check the URL and that CORS allows this page.';
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadBtn.addEventListener('click', loadData);
+</script>
+</body>
+</html>
