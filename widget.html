@@ -3,8 +3,7 @@
   -------------------------------------
   Paste this entire block into an Elementor "HTML" widget on the
   WordPress site (any page - it floats in the corner site-wide if
-  added to the footer template). Update API_URL to your deployed
-  backend once main.py is hosted.
+  added to the footer template).
 -->
 <style>
   #mi-chat-bubble {
@@ -50,8 +49,7 @@
 
 <script>
 (function () {
-  // Update this once the FastAPI backend is deployed (e.g. Render/Railway URL)
-  const API_URL = "http://localhost:8000/chat";
+  const API_URL = "https://manish-chatbot.onrender.com/chat";
 
   const bubble = document.getElementById("mi-chat-bubble");
   const win = document.getElementById("mi-chat-window");
