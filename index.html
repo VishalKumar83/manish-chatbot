@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Customer Chatbot — Manish Innovations Demo | Vishal Kumar</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #f4f6f5;
+    margin: 0;
+    padding: 40px 20px;
+    color: #1a1a1a;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 26px; margin-bottom: 6px; color: #1a1a1a; }
+  .subtitle { color: #555; font-size: 15px; margin-bottom: 28px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 24px 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 20px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 10px; color: #2e7d32; }
+  .card p { font-size: 14px; line-height: 1.6; color: #333; margin: 0; }
+  .tag {
+    display: inline-block; background: #e8f5e9; color: #2e7d32;
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    margin-right: 8px; margin-bottom: 8px;
+  }
+  .instructions {
+    background: #fffde7; border: 1px solid #fff59d; border-radius: 10px;
+    padding: 16px 20px; font-size: 13px; color: #5d4c1f; margin-bottom: 28px;
+  }
+  footer { text-align: center; font-size: 12px; color: #999; margin-top: 40px; }
+  a { color: #2e7d32; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Customer Chatbot — Live Demo</h1>
+    <div class="subtitle">Built for Manish Innovations, an agriculture products exporter · by Vishal Kumar</div>
+
+    <div class="instructions">
+      👉 <strong>Try it now:</strong> click the green chat bubble in the bottom-right corner and ask something like
+      <em>"Do you export turmeric?"</em> or <em>"What certifications do you have?"</em>
+    </div>
+
+    <div class="card">
+      <h2>What this is</h2>
+      <p>
+        A retrieval-grounded AI chatbot that answers customer questions about products, certifications,
+        and export process — using real business data instead of letting the model improvise. Built with
+        FastAPI + Google Gemini, deployed live on Render, with conversation logging and an analytics
+        dashboard behind the scenes.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Tech stack</h2>
+      <span class="tag">FastAPI</span>
+      <span class="tag">Google Gemini API</span>
+      <span class="tag">SQLite logging</span>
+      <span class="tag">REST analytics endpoint</span>
+      <span class="tag">Render (deployment)</span>
+      <span class="tag">Vanilla JS widget</span>
+    </div>
+
+    <div class="card">
+      <h2>About the business it's built for</h2>
+      <p>
+        Manish Innovations (<a href="https://innovationsmanish.com" target="_blank">innovationsmanish.com</a>)
+        is an APEDA and Spice Board of India certified agriculture products exporter based in Jamshedpur,
+        India, dealing in spices, powders, nuts, pulses, and edible oils.
+      </p>
+    </div>
+
+    <footer>
+      Built by Vishal Kumar · <a href="https://github.com/VishalKumar83/manish-chatbot" target="_blank">View source on GitHub</a>
+    </footer>
+  </div>
+
+  <!-- ===================== CHAT WIDGET ===================== -->
+  <style>
+    #mi-chat-bubble {
+      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: #2e7d32; color: #fff; display: flex;
+      align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      font-size: 26px; font-family: sans-serif;
+    }
+    #mi-chat-window {
+      position: fixed; bottom: 90px; right: 20px; z-index: 9999;
+      width: 320px; max-width: 90vw; height: 420px;
+      background: #fff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+      display: none; flex-direction: column; overflow: hidden;
+      font-family: sans-serif;
+    }
+    #mi-chat-header {
+      background: #2e7d32; color: #fff; padding: 12px 16px;
+      font-weight: 600; font-size: 15px;
+    }
+    #mi-chat-messages {
+      flex: 1; padding: 12px; overflow-y: auto; font-size: 14px; background: #f7f7f7;
+    }
+    .mi-msg { margin-bottom: 10px; line-height: 1.4; }
+    .mi-msg.user { text-align: right; }
+    .mi-msg.user span { background: #2e7d32; color: #fff; padding: 6px 10px; border-radius: 10px 10px 0 10px; display: inline-block; }
+    .mi-msg.bot span { background: #e6e6e6; color: #222; padding: 6px 10px; border-radius: 10px 10px 10px 0; display: inline-block; }
+    #mi-chat-input-row { display: flex; border-top: 1px solid #ddd; }
+    #mi-chat-input { flex: 1; border: none; padding: 10px; font-size: 14px; outline: none; }
+    #mi-chat-send { border: none; background: #2e7d32; color: #fff; padding: 0 16px; cursor: pointer; }
+  </style>
+
+  <div id="mi-chat-bubble">💬</div>
+  <div id="mi-chat-window">
+    <div id="mi-chat-header">Manish Innovations Assistant</div>
+    <div id="mi-chat-messages"></div>
+    <div id="mi-chat-input-row">
+      <input id="mi-chat-input" type="text" placeholder="Ask about our products..." />
+      <button id="mi-chat-send">Send</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const API_URL = "https://manish-chatbot.onrender.com/chat";
+
+    const bubble = document.getElementById("mi-chat-bubble");
+    const win = document.getElementById("mi-chat-window");
+    const messagesEl = document.getElementById("mi-chat-messages");
+    const input = document.getElementById("mi-chat-input");
+    const sendBtn = document.getElementById("mi-chat-send");
+
+    let history = [];
+
+    bubble.addEventListener("click", () => {
+      win.style.display = win.style.display === "flex" ? "none" : "flex";
+      if (messagesEl.childElementCount === 0) {
+        addMessage("bot", "Hi! I'm the Manish Innovations assistant. Ask me about our spices, powders, nuts, or export process.");
+      }
+    });
+
+    function addMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = "mi-msg " + (role === "user" ? "user" : "bot");
+      const span = document.createElement("span");
+      span.textContent = text;
+      div.appendChild(span);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage("user", text);
+      input.value = "";
+      addMessage("bot", "...");
+      const thinkingEl = messagesEl.lastChild;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history }),
+        });
+        const data = await res.json();
+        thinkingEl.remove();
+        addMessage("bot", data.reply || "Sorry, I couldn't process that.");
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: data.reply || "" });
+      } catch (err) {
+        thinkingEl.remove();
+        addMessage("bot", "Sorry, I'm having trouble connecting right now. The backend may be waking up from sleep (free tier) — try again in 30 seconds.");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  })();
+  </script>
+</body>
+</html>
